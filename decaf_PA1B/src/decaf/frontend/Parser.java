@@ -80,12 +80,30 @@ public class Parser extends Table {
      */
     private SemValue parse(int symbol, Set<Integer> follow) {
         Pair<Integer, List<Integer>> result = query(symbol, lookahead); // get production by lookahead symbol
+
+        if(result==null){
+            error();
+            while(true){
+                lookahead=lex();
+                result = query(symbol, lookahead);
+                if(result!=null){
+                    break;
+                }
+                if(followSet(symbol).contains(lookahead)||follow.contains(lookahead)){
+                    return null;
+                }
+            }
+        }
+
         int actionId = result.getKey(); // get user-defined action
 
         List<Integer> right = result.getValue(); // right-hand side of production
         int length = right.size();
         SemValue[] params = new SemValue[length + 1];
 
+        Set<Integer> newFollow=new HashSet<Integer>();
+        newFollow.addAll(follow);
+        newFollow.addAll(followSet(symbol));
         for (int i = 0; i < length; i++) { // parse right-hand side symbols one by one
             int term = right.get(i);
             params[i + 1] = isNonTerminal(term)
@@ -95,7 +113,10 @@ public class Parser extends Table {
         }
 
         params[0] = new SemValue(); // initialize return value
-        act(actionId, params); // do user-defined action
+        try{
+            act(actionId, params); // do user-defined action
+        }
+        catch(NullPointerException e){}
         return params[0];
     }
 
@@ -123,7 +144,9 @@ public class Parser extends Table {
      */
     public Tree.TopLevel parseFile() {
         lookahead = lex();
-        SemValue r = parse(start, new HashSet<>());
+        Set<Integer> follow=new HashSet<>();
+        follow.add(eos);
+        SemValue r = parse(start, follow);
         return r == null ? null : r.prog;
     }
 

@@ -11,15 +11,15 @@ javafx.util.Pair
 %start Program
 
 %tokens
-VOID   BOOL  INT   STRING   CLASS
-NULL   EXTENDS     THIS     WHILE   FOR
-IF     ELSE        RETURN   BREAK   NEW
-PRINT  READ_INTEGER         READ_LINE
+VOID   BOOL  INT   STRING   COMPLEX CLASS 
+NULL   EXTENDS     THIS     WHILE   FOR   
+IF     ELSE        RETURN   BREAK   NEW	
+PRINT  READ_INTEGER         READ_LINE	PRINTCOMP
 LITERAL
-IDENTIFIER   AND      OR    STATIC  INSTANCEOF
-LESS_EQUAL   GREATER_EQUAL  EQUAL   NOT_EQUAL
+IDENTIFIER	  AND    OR    STATIC  INSTANCEOF
+LESS_EQUAL   GREATER_EQUAL  EQUAL   NOT_EQUAL CASE DEFAULT SUPER	DCOPY	SCOPY	DO OD	DOOR
 '+'  '-'  '*'  '/'  '%'  '='  '>'  '<'  '.'
-','  ';'  '!'  '('  ')'  '['  ']'  '{'  '}'
+','  ';'  '!'  '@'  '$'  '#'  '('  ')'  '['  ']'  '{'  '}'
 
 %%
 
