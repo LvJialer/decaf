@@ -1,6 +1,29 @@
-*** Error at (3,9): syntax error
-*** Error at (4,9): syntax error
-*** Error at (5,9): syntax error
-*** Error at (9,9): syntax error
-*** Error at (9,20): syntax error
-*** Error at (9,26): syntax error
+program
+    class Main <empty>
+        static func main voidtype
+            formals
+            stmtblock
+                vardef x comptype
+                vardef y comptype
+                vardef z comptype
+                assign
+                    varref x
+                    add
+                        intconst 2
+                        imgconst 3j
+                assign
+                    varref y
+                    sub
+                        neg
+                            imgconst 24j
+                        intconst 900
+                assign
+                    varref z
+                    mul
+                        neg
+                            imgconst 1j
+                        intconst 10
+                printcomp
+                    varref x
+                    varref y
+                    varref z

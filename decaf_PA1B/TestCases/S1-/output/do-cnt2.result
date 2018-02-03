@@ -1,18 +1,36 @@
-Exception in thread "main" java.lang.ClassCastException: decaf.tree.Tree$Binary cannot be cast to decaf.tree.Tree$LValue
-	at decaf.tree.Tree$Assign.<init>(Tree.java:822)
-	at decaf.frontend.Table.act(Table.java:1849)
-	at decaf.frontend.Parser.parse(Parser.java:117)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parseFile(Parser.java:149)
-	at decaf.Driver.compile(Driver.java:56)
-	at decaf.Driver.main(Driver.java:70)
+program
+    class Main <empty>
+        static func main voidtype
+            formals
+            stmtblock
+                vardef x inttype
+                vardef y inttype
+                assign
+                    varref x
+                    intconst 0
+                assign
+                    varref y
+                    intconst 0
+                do
+                    branches
+                        branch
+                            les
+                                varref x
+                                intconst 100
+                            assign
+                                varref x
+                                add
+                                    varref x
+                                    intconst 1
+                        branch
+                            les
+                                varref y
+                                intconst 100
+                            assign
+                                varref y
+                                add
+                                    varref y
+                                    intconst 1
+                print
+                    varref x
+                    varref y

@@ -13,6 +13,11 @@ import decaf.tree.Tree.MethodDef;
 import decaf.tree.Tree.TopLevel;
 import decaf.tree.Tree.TypeLiteral;
 import decaf.tree.Tree.VarDef;
+import decaf.tree.Tree.AcaseExor;
+import decaf.tree.Tree.CaseExpr;
+import decaf.tree.Tree.CasesExpr;
+import decaf.tree.Tree.DefaultExpr;
+import decaf.tree.Tree.DoSubStmt;
 import decaf.utils.MiscUtils;
 
 public class SemValue {
@@ -35,6 +40,7 @@ public class SemValue {
 
     public List<ClassDef> clist;
 
+    public List<AcaseExor> aclist;
     /**
      * field list
      */
@@ -71,6 +77,15 @@ public class SemValue {
 
     public Vector<SemValue> vec;
 
+    public AcaseExor acaseexor;
+
+	public DefaultExpr defaultexpr;
+
+	public CasesExpr casesexpr;
+
+    public DoSubStmt dosubstmt;
+
+	public List<DoSubStmt> dobranches;
     /**
      * 创建一个关键字的语义值
      *
@@ -198,6 +213,9 @@ public class SemValue {
                     case Tree.INT:
                     case Tree.BOOL:
                         msg = "constant : " + literal;
+                        break;
+                    case Tree.COMPLEX:
+                        msg= "constant : "+literal+"j";
                         break;
                     default:
                         msg = "constant : " + MiscUtils.quote((String) literal);

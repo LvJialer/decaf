@@ -80,21 +80,20 @@ public class Parser extends Table {
      */
     private SemValue parse(int symbol, Set<Integer> follow) {
         Pair<Integer, List<Integer>> result = query(symbol, lookahead); // get production by lookahead symbol
-
         if(result==null){
             error();
             while(true){
+                if(followSet(symbol).contains(lookahead)||follow.contains(lookahead)){
+                    return null;
+                }
                 lookahead=lex();
                 result = query(symbol, lookahead);
                 if(result!=null){
                     break;
                 }
-                if(followSet(symbol).contains(lookahead)||follow.contains(lookahead)){
-                    return null;
-                }
             }
         }
-
+        
         int actionId = result.getKey(); // get user-defined action
 
         List<Integer> right = result.getValue(); // right-hand side of production
@@ -107,7 +106,7 @@ public class Parser extends Table {
         for (int i = 0; i < length; i++) { // parse right-hand side symbols one by one
             int term = right.get(i);
             params[i + 1] = isNonTerminal(term)
-                    ? parse(term, follow) // for non terminals: recursively parse it
+                    ? parse(term, newFollow) // for non terminals: recursively parse it
                     : matchToken(term) // for terminals: match token
                     ;
         }

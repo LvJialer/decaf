@@ -1,18 +1,26 @@
-Exception in thread "main" java.lang.ClassCastException: decaf.tree.Tree$Binary cannot be cast to decaf.tree.Tree$LValue
-	at decaf.tree.Tree$Assign.<init>(Tree.java:822)
-	at decaf.frontend.Table.act(Table.java:1849)
-	at decaf.frontend.Parser.parse(Parser.java:117)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parse(Parser.java:110)
-	at decaf.frontend.Parser.parseFile(Parser.java:149)
-	at decaf.Driver.compile(Driver.java:56)
-	at decaf.Driver.main(Driver.java:70)
+program
+    class Main <empty>
+        static func main voidtype
+            formals
+            stmtblock
+                vardef N inttype
+                assign
+                    varref N
+                    intconst 100
+                vardef cnt inttype
+                assign
+                    varref cnt
+                    intconst 0
+                do
+                    branches
+                        branch
+                            les
+                                varref n
+                                varref N
+                            assign
+                                varref cnt
+                                add
+                                    varref cnt
+                                    intconst 1
+                print
+                    varref N

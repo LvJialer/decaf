@@ -18,7 +18,7 @@ PRINT  READ_INTEGER         READ_LINE	PRINTCOMP
 LITERAL
 IDENTIFIER	  AND    OR    STATIC  INSTANCEOF
 LESS_EQUAL   GREATER_EQUAL  EQUAL   NOT_EQUAL CASE DEFAULT SUPER	DCOPY	SCOPY	DO OD	DOOR
-'+'  '-'  '*'  '/'  '%'  '='  '>'  '<'  '.'
+'+'  '-'  '*'  '/'  '%'  '='  '>'  '<'  '.' ':'
 ','  ';'  '!'  '@'  '$'  '#'  '('  ')'  '['  ']'  '{'  '}'
 
 %%
@@ -73,6 +73,10 @@ SimpleType      :   INT
                     {
                         $$.type = new Tree.TypeIdent(Tree.STRING, $1.loc);
                     }
+                |	COMPLEX
+                	{
+                		$$.type = new Tree.TypeIdent(Tree.COMPLEX, $1.loc);
+                	}
                 |   CLASS IDENTIFIER
                     {
                         $$.type = new Tree.TypeClass($2.ident, $1.loc);
@@ -228,6 +232,10 @@ Stmt            :   VariableDef
                     {
                         $$.stmt = $1.stmt;
                     }
+                |	PrintCompStmt ';'
+                    {
+                        $$.stmt = $1.stmt;
+                    }
                 |   BreakStmt ';'
                     {
                         $$.stmt = $1.stmt;
@@ -236,8 +244,37 @@ Stmt            :   VariableDef
                     {
                         $$.stmt = $1.stmt;
                     }
+                |	DoStmt ';'
+                    {
+                        $$.stmt = $1.stmt;
+                    }
                 ;
-
+DoStmt			:	DO DoSubStmt DoBranches OD
+					{
+						$$.stmt=new Tree.DoStmt($2.dosubstmt,$3.dobranches,$1.loc);
+					}
+                ;
+DoBranches		:	DoBranch DoBranches
+					{
+						$$.dobranches=new ArrayList<DoSubStmt>();
+                        $$.dobranches.add($1.dosubstmt);
+                        $$.dobranches.addAll($2.dobranches);
+					}
+				|
+					{
+						$$.dobranches=new ArrayList<DoSubStmt>();
+					}
+                ;
+DoBranch		:	DOOR DoSubStmt
+					{
+						$$.dosubstmt=$2.dosubstmt;
+					}
+                ;
+DoSubStmt		:	Expr ':' Stmt
+					{
+						$$.dosubstmt=new Tree.DoSubStmt($1.expr,$3.stmt,$1.loc);
+					}
+                ;
 SimpleStmt      :   Expr Assignment
                     {
                         if ($2.expr == null) {
@@ -345,6 +382,21 @@ Oper7           :   '-'
                         $$.counter = Tree.NOT;
                         $$.loc = $1.loc;
                     }
+                |   '@'
+                    {
+                        $$.counter = Tree.RE;
+                        $$.loc = $1.loc;
+                    }
+                |   '$'
+                    {
+                        $$.counter = Tree.IM;
+                        $$.loc = $1.loc;
+                    }
+                |   '#'
+                    {
+                        $$.counter = Tree.COMPCAST;
+                        $$.loc = $1.loc;
+                    }
                 ;
 
 // expressions
@@ -352,7 +404,46 @@ Expr            :   Expr1
                     {
                         $$.expr = $1.expr;
                     }
+                |	CASE '(' Expr ')' '{' CasesExpr '}'
+                	{
+                		$$.expr=new Tree.CaseExpr($3.expr,$6.casesexpr,$1.loc);
+                	}
+                |	DCOPY '(' Expr ')'
+					{
+						$$.expr=new Tree.DeepCopy($3.expr,$1.loc);
+					}
+				|	SCOPY '(' Expr ')'
+					{
+						$$.expr=new Tree.ShallowCopy($3.expr,$1.loc);
+					}
                 ;
+CasesExpr		:	CaseExor DefaultExpr
+					{
+						$$.casesexpr=new CasesExpr($1.aclist,$2.defaultexpr,$1.loc);
+					}
+				;
+CaseExor		:	AcaseExor CaseExor
+					{
+						$$.aclist=new ArrayList<Tree.AcaseExor>();
+                        $$.aclist.add($1.acaseexor);
+                        $$.aclist.addAll($2.aclist);
+					}
+				|
+                    {
+                        $$.aclist=new ArrayList<Tree.AcaseExor>();
+                    }
+                ;
+AcaseExor		:	Constant ':' Expr ';'
+					{
+						$$.acaseexor=new Tree.AcaseExor($1.expr,$3.expr,$1.loc);
+					}
+				;
+
+DefaultExpr		:	DEFAULT ':' Expr ';'
+					{
+						$$.defaultexpr=new Tree.DefaultExpr($3.expr,$1.loc);
+					}
+				;
 
 Expr1           :   Expr2 ExprT1
                     {
@@ -606,6 +697,10 @@ Expr9           :   Constant
                     {
                         $$.expr = new Tree.ThisExpr($1.loc);
                     }
+                |	SUPER
+                	{
+                		$$.expr = new Tree.SuperExpr($1.loc);
+                	}
                 |   NEW AfterNewExpr
                     {
                         if ($2.ident != null) {
@@ -760,3 +855,8 @@ PrintStmt       :   PRINT '(' ExprList ')'
                         $$.stmt = new Tree.Print($3.elist, $1.loc);
                     }
                 ;
+PrintCompStmt	:	PRINTCOMP '(' ExprList ')'
+					{
+						$$.stmt = new Tree.PrintComp($3.elist, $1.loc);
+					}
+				;
