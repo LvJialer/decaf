@@ -10,7 +10,12 @@ import decaf.tree.Tree.MethodDef;
 import decaf.tree.Tree.LValue;
 import decaf.tree.Tree.TopLevel;
 import decaf.tree.Tree.VarDef;
+import decaf.tree.Tree.AcaseExor;
+import decaf.tree.Tree.CaseExpr;
+import decaf.tree.Tree.CasesExpr;
 import decaf.tree.Tree.TypeLiteral;
+import decaf.tree.Tree.DefaultExpr;
+import decaf.tree.Tree.DoSubStmt;
 import decaf.utils.MiscUtils;
 
 public class SemValue {
@@ -27,6 +32,7 @@ public class SemValue {
 
 	public List<ClassDef> clist;
 
+	public List<AcaseExor> aclist;
 	/**
 	 * field list
 	 */
@@ -57,6 +63,17 @@ public class SemValue {
 	public Expr expr;
 
 	public LValue lvalue;
+
+	public AcaseExor acaseexor;
+
+	public DefaultExpr defaultexpr;
+
+	public CasesExpr casesexpr;
+
+	public DoSubStmt dosubstmt;
+
+	public List<DoSubStmt> dobranches;
+	
 
 	/**
 	 * 创建一个关键字的语义值
@@ -173,6 +190,9 @@ public class SemValue {
 		case Parser.THIS:
 			msg = "keyword  : this";
 			break;
+		case Parser.SUPER:
+			msg = "keyword  : super";
+			break;
 		case Parser.VOID:
 			msg = "keyword  : void";
 			break;
@@ -182,6 +202,18 @@ public class SemValue {
 		case Parser.STATIC:
 			msg = "keyword : static";
 			break;
+		case Parser.CASE:
+			msg = "keyword : case";
+			break;
+		case Parser.DEFAULT:
+			msg = "keyword : default";
+			break;
+		case Parser.DCOPY:
+			msg = "keyword : dcopy";
+			break;
+		case Parser.SCOPY:
+			msg = "keyword : scopy";
+			break;
 
 		// 常量
 		case Parser.LITERAL:
@@ -189,6 +221,9 @@ public class SemValue {
 			case Tree.INT:
 			case Tree.BOOL:
 				msg = "constant : " + literal;
+				break;
+			case Tree.COMPLEX:
+				msg= "constant : "+literal+"j";
 				break;
 			default:
 				msg = "constant : " + MiscUtils.quote((String)literal);
