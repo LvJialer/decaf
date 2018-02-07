@@ -433,9 +433,9 @@ CaseExor		:	AcaseExor CaseExor
                         $$.aclist=new ArrayList<Tree.AcaseExor>();
                     }
                 ;
-AcaseExor		:	Constant ':' Expr ';'
+AcaseExor		:	LITERAL ':' Expr ';'
 					{
-						$$.acaseexor=new Tree.AcaseExor($1.expr,$3.expr,$1.loc);
+						$$.acaseexor=new Tree.AcaseExor(new Tree.Literal($1.typeTag, $1.literal, $1.loc),$3.expr,$1.loc);
 					}
 				;
 

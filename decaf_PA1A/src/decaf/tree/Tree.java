@@ -515,10 +515,10 @@ public abstract class Tree {
 
     public static class AcaseExor extends Tree {
 
-        public Expr constant;
+        public Literal constant;
         public Expr expr;
  
-        public AcaseExor(Expr constant, Expr expr,Location loc) {
+        public AcaseExor(Literal constant, Expr expr,Location loc) {
             super(ACASEEXOR, loc);
             this.constant = constant;
             this.expr=expr;

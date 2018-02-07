@@ -112,7 +112,7 @@
   86  CaseExor : CaseExor AcaseExor
   87           |
 
-  88  AcaseExor : Constant ':' Expr ';'
+  88  AcaseExor : LITERAL ':' Expr ';'
 
   89  DefaultExpr : DEFAULT ':' Expr ';'
 
@@ -3953,12 +3953,10 @@ state 206
 	CasesExpr : CaseExor . DefaultExpr  (85)
 	CaseExor : CaseExor . AcaseExor  (86)
 
-	NULL  shift 47
-	LITERAL  shift 59
-	DEFAULT  shift 210
+	LITERAL  shift 210
+	DEFAULT  shift 211
 	.  error
 
-	Constant  goto 211
 	DefaultExpr  goto 212
 	AcaseExor  goto 213
 
@@ -3983,14 +3981,14 @@ state 209
 
 
 state 210
-	DefaultExpr : DEFAULT . ':' Expr ';'  (89)
+	AcaseExor : LITERAL . ':' Expr ';'  (88)
 
 	':'  shift 215
 	.  error
 
 
 state 211
-	AcaseExor : Constant . ':' Expr ';'  (88)
+	DefaultExpr : DEFAULT . ':' Expr ';'  (89)
 
 	':'  shift 216
 	.  error
@@ -4070,7 +4068,7 @@ state 214
 
 
 state 215
-	DefaultExpr : DEFAULT ':' . Expr ';'  (89)
+	AcaseExor : LITERAL ':' . Expr ';'  (88)
 	Receiver : .  (48)
 
 	NULL  shift 47
@@ -4100,7 +4098,7 @@ state 215
 
 
 state 216
-	AcaseExor : Constant ':' . Expr ';'  (88)
+	DefaultExpr : DEFAULT ':' . Expr ';'  (89)
 	Receiver : .  (48)
 
 	NULL  shift 47
@@ -4151,7 +4149,7 @@ state 218
 	Expr : Expr . GREATER_EQUAL Expr  (65)
 	Expr : Expr . AND Expr  (66)
 	Expr : Expr . OR Expr  (67)
-	DefaultExpr : DEFAULT ':' Expr . ';'  (89)
+	AcaseExor : LITERAL ':' Expr . ';'  (88)
 
 	AND  shift 120
 	OR  shift 121
@@ -4188,7 +4186,7 @@ state 219
 	Expr : Expr . GREATER_EQUAL Expr  (65)
 	Expr : Expr . AND Expr  (66)
 	Expr : Expr . OR Expr  (67)
-	AcaseExor : Constant ':' Expr . ';'  (88)
+	DefaultExpr : DEFAULT ':' Expr . ';'  (89)
 
 	AND  shift 120
 	OR  shift 121
@@ -4210,15 +4208,15 @@ state 219
 
 
 state 220
-	DefaultExpr : DEFAULT ':' Expr ';' .  (89)
+	AcaseExor : LITERAL ':' Expr ';' .  (88)
 
-	.  reduce 89
+	.  reduce 88
 
 
 state 221
-	AcaseExor : Constant ':' Expr ';' .  (88)
+	DefaultExpr : DEFAULT ':' Expr ';' .  (89)
 
-	.  reduce 88
+	.  reduce 89
 
 
 64 terminals, 39 nonterminals

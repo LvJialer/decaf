@@ -1,7 +1,7 @@
 /* This is auto-generated source by LL1-Parser-Gen.
- * Specification file: /home/ubuntu/decaf/decaf_PA1B/src/decaf/frontend/Parser.spec
+ * Specification file: /home/jialelv/decaf/decaf_PA1B/src/decaf/frontend/Parser.spec
  * Options: unstrict mode
- * Generated at: Sat Feb 03 19:31:51 CST 2018
+ * Generated at: Wed Feb 07 16:11:37 CST 2018
  * Please do NOT modify it!
  *
  * Project repository: https://github.com/paulzfm/LL1-Parser-Gen
@@ -194,14 +194,14 @@ public class Table
         {Integer.valueOf('+'), Integer.valueOf('-'), LESS_EQUAL, Integer.valueOf(']'), GREATER_EQUAL, Integer.valueOf(':'), EQUAL, Integer.valueOf(')'), NOT_EQUAL, Integer.valueOf(','), Integer.valueOf('='), OR, AND, Integer.valueOf(';'), Integer.valueOf('<'), Integer.valueOf('>')},
         {EQUAL, NOT_EQUAL},
         {Integer.valueOf('*'), Integer.valueOf('/'), Integer.valueOf('%')},
-        {LITERAL, NULL, DEFAULT},
+        {LITERAL, DEFAULT},
         {COMPLEX, VOID, CLASS, INT, STRING, BOOL},
         {COMPLEX, VOID, CLASS, INT, STRING, BOOL, Integer.valueOf(')')},
         {Integer.valueOf('-'), Integer.valueOf('!'), Integer.valueOf('@'), Integer.valueOf('$'), Integer.valueOf('#')},
         {READ_LINE, NULL, IDENTIFIER, NEW, THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), SUPER, READ_INTEGER},
         {Integer.valueOf(']'), CASE, Integer.valueOf('!'), Integer.valueOf('-'), READ_LINE, NULL, SCOPY, Integer.valueOf('@'), IDENTIFIER, NEW, Integer.valueOf('$'), THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), Integer.valueOf('#'), DCOPY, SUPER, READ_INTEGER},
         {Integer.valueOf('!'), Integer.valueOf('-'), READ_LINE, NULL, Integer.valueOf('@'), IDENTIFIER, NEW, Integer.valueOf('$'), THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), Integer.valueOf('#'), SUPER, READ_INTEGER},
-        {LITERAL, NULL, DEFAULT},
+        {LITERAL, DEFAULT},
         {AND},
         {Integer.valueOf('!'), Integer.valueOf('-'), READ_LINE, NULL, Integer.valueOf('@'), IDENTIFIER, NEW, Integer.valueOf('$'), THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), Integer.valueOf('#'), SUPER, READ_INTEGER},
         {BREAK},
@@ -243,7 +243,7 @@ public class Table
         {EQUAL, NOT_EQUAL, Integer.valueOf(']'), Integer.valueOf(':'), Integer.valueOf(')'), Integer.valueOf(','), Integer.valueOf('='), OR, AND, Integer.valueOf(';')},
         {COMPLEX, VOID, CLASS, INT, STRING, BOOL, CASE, Integer.valueOf('!'), Integer.valueOf('-'), READ_LINE, NULL, SCOPY, Integer.valueOf('@'), IDENTIFIER, NEW, Integer.valueOf('$'), THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), Integer.valueOf(';'), Integer.valueOf('#'), DCOPY, SUPER, READ_INTEGER, IF, WHILE, FOR, RETURN, PRINT, PRINTCOMP, BREAK, Integer.valueOf('{'), DO},
         {CASE, Integer.valueOf('!'), Integer.valueOf('-'), READ_LINE, NULL, SCOPY, Integer.valueOf('@'), IDENTIFIER, NEW, Integer.valueOf('$'), THIS, INSTANCEOF, LITERAL, Integer.valueOf('('), Integer.valueOf('#'), DCOPY, SUPER, READ_INTEGER, Integer.valueOf(';'), Integer.valueOf(')')},
-        {LITERAL, NULL},
+        {LITERAL},
         {INT, VOID, BOOL, STRING, COMPLEX, CLASS},
         {WHILE},
         {OR, Integer.valueOf(']'), Integer.valueOf(':'), Integer.valueOf(')'), Integer.valueOf(','), Integer.valueOf('='), Integer.valueOf(';')},
@@ -328,7 +328,7 @@ public class Table
         {Integer.valueOf(']'), Integer.valueOf(':'), Integer.valueOf(')'), Integer.valueOf(','), Integer.valueOf('='), OR, AND, Integer.valueOf(';')},
         {PRINT, CASE, COMPLEX, VOID, FOR, Integer.valueOf('!'), Integer.valueOf('-'), CLASS, PRINTCOMP, READ_LINE, WHILE, RETURN, NULL, INT, SCOPY, Integer.valueOf('}'), Integer.valueOf('@'), DO, IDENTIFIER, NEW, Integer.valueOf('$'), IF, THIS, INSTANCEOF, STRING, LITERAL, ELSE, Integer.valueOf('('), Integer.valueOf(';'), Integer.valueOf('#'), OD, DCOPY, BOOL, SUPER, BREAK, DOOR, READ_INTEGER, Integer.valueOf('{')},
         {Integer.valueOf(';'), Integer.valueOf(')')},
-        {LITERAL, NULL, DEFAULT},
+        {LITERAL, DEFAULT},
         {Integer.valueOf('['), IDENTIFIER},
         {PRINT, CASE, COMPLEX, VOID, FOR, Integer.valueOf('!'), Integer.valueOf('-'), CLASS, PRINTCOMP, READ_LINE, WHILE, RETURN, NULL, INT, SCOPY, Integer.valueOf('}'), Integer.valueOf('@'), DO, IDENTIFIER, NEW, Integer.valueOf('$'), IF, THIS, INSTANCEOF, STRING, LITERAL, ELSE, Integer.valueOf('('), Integer.valueOf(';'), Integer.valueOf('#'), OD, DCOPY, BOOL, SUPER, BREAK, DOOR, READ_INTEGER, Integer.valueOf('{')},
         {Integer.valueOf(']'), Integer.valueOf(':'), Integer.valueOf(')'), Integer.valueOf(','), Integer.valueOf('='), Integer.valueOf(';')},
@@ -466,7 +466,6 @@ public class Table
             case CasesExpr: {
                 switch (lookahead) {
                     case LITERAL:
-                    case NULL:
                     case DEFAULT:
                         return new Pair<>(9, Arrays.asList(CaseExor, DefaultExpr));
                     default: return null;
@@ -586,7 +585,6 @@ public class Table
             case CaseExor: {
                 switch (lookahead) {
                     case LITERAL:
-                    case NULL:
                         return new Pair<>(22, Arrays.asList(AcaseExor, CaseExor));
                     case DEFAULT:
                         return new Pair<>(23, Arrays.asList());
@@ -1293,8 +1291,7 @@ public class Table
             case AcaseExor: {
                 switch (lookahead) {
                     case LITERAL:
-                    case NULL:
-                        return new Pair<>(105, Arrays.asList(Constant, Integer.valueOf(':'), Expr, Integer.valueOf(';')));
+                        return new Pair<>(105, Arrays.asList(LITERAL, Integer.valueOf(':'), Expr, Integer.valueOf(';')));
                     default: return null;
                 }
             }
@@ -2220,7 +2217,7 @@ public class Table
             }
             case 105: {
                 //# line 437
-                params[0].acaseexor=new Tree.AcaseExor(params[1].expr,params[3].expr,params[1].loc);
+                params[0].acaseexor=new Tree.AcaseExor(new Tree.Literal(params[1].typeTag, params[1].literal, params[1].loc),params[3].expr,params[1].loc);
                 return;
             }
             case 106: {
