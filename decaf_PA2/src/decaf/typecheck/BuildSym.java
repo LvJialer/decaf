@@ -242,6 +242,12 @@ public class BuildSym extends Tree.Visitor {
 		}
 	}
 
+	public void visitDoStmt(Tree.DoStmt dostmt) {
+		for(Tree.DoSubStmt e:dostmt.dobranches){
+			e.branch.accept(this);
+		}
+	}
+
 	private int calcOrder(Class c) {
 		if (c == null) {
 			return -1;

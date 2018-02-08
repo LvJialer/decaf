@@ -22,12 +22,16 @@ import decaf.error.BadTestExpr;
 import decaf.error.BreakOutOfLoopError;
 import decaf.error.ClassNotFoundError;
 import decaf.error.ConditionIsNotUniqueError;
+import decaf.error.CopyExprNotTheSameError;
 import decaf.error.DecafError;
+import decaf.error.DoStmtRequestdTypeBoolError;
+import decaf.error.ExpectedClassTypeForCopyExpr;
 import decaf.error.FieldNotAccessError;
 import decaf.error.FieldNotFoundError;
 import decaf.error.IncompatBinOpError;
 import decaf.error.IncompatibleCaseExprError;
 import decaf.error.IncompatUnOpError;
+import decaf.error.NoParentClassExistError;
 import decaf.error.NotArrayError;
 import decaf.error.NotClassError;
 import decaf.error.NotClassFieldError;
@@ -35,6 +39,7 @@ import decaf.error.NotClassMethodError;
 import decaf.error.RefNonStaticError;
 import decaf.error.SubNotIntError;
 import decaf.error.SuperInStaticFuncError;
+import decaf.error.SuperMemberVarError;
 import decaf.error.ThisInStaticFuncError;
 import decaf.error.UndeclVarError;
 import decaf.frontend.Parser;
@@ -169,9 +174,25 @@ public class TypeCheck extends Tree.Visitor {
 	}
 
 	private void checkCallExpr(Tree.CallExpr callExpr, Symbol f) {
-		Type receiverType = callExpr.receiver == null ? ((ClassScope) table
-				.lookForScope(Scope.Kind.CLASS)).getOwner().getType()
-				: callExpr.receiver.type;
+		Type receiverType = ((ClassScope) table.lookForScope(Scope.Kind.CLASS)).getOwner().getType();
+		if(callExpr.receiver == null){
+
+		}
+		else if(callExpr.receiver.tag==Tree.SUPEREXPR){
+			Class parent=((ClassScope) table.lookForScope(Scope.Kind.CLASS)).getOwner().getParent();
+			if(parent==null){
+				issueError(new NoParentClassExistError(callExpr.getLocation(),receiverType.toString()));
+				receiverType=BaseType.ERROR;
+				callExpr.type = BaseType.ERROR;
+				return;
+			}
+			else{
+				receiverType = parent.getType();
+			}
+		}
+		else{
+			receiverType = callExpr.receiver.type;
+		}
 		if (f == null) {
 			issueError(new FieldNotFoundError(callExpr.getLocation(),
 					callExpr.method, receiverType.toString()));
@@ -267,8 +288,14 @@ public class TypeCheck extends Tree.Visitor {
 			return;
 		}
 
-		ClassScope cs = ((ClassType) callExpr.receiver.type)
-				.getClassScope();
+		ClassScope cs = ((ClassType) callExpr.receiver.type).getClassScope();
+		if(callExpr.receiver.tag==Tree.SUPEREXPR){
+			cs=cs.getParentScope();
+			if(cs==null){
+				checkCallExpr(callExpr, null);
+				return;
+			}
+		}
 		checkCallExpr(callExpr, cs.lookupVisible(callExpr.method));
 	}
 
@@ -409,7 +436,11 @@ public class TypeCheck extends Tree.Visitor {
 			ident.owner.usedForRef = true;
 			ident.owner.accept(this);
 			if (!ident.owner.type.equal(BaseType.ERROR)) {
-				if (ident.owner.isClass || !ident.owner.type.isClassType()) {
+				if(ident.owner.tag==Tree.SUPEREXPR){
+					issueError(new SuperMemberVarError(ident.getLocation()));
+					ident.type = BaseType.ERROR;
+				}
+				else if (ident.owner.isClass || !ident.owner.type.isClassType()) {
 					issueError(new NotClassFieldError(ident.getLocation(),
 							ident.name, ident.owner.type.toString()));
 					ident.type = BaseType.ERROR;
@@ -483,7 +514,12 @@ public class TypeCheck extends Tree.Visitor {
 	public void visitAssign(Tree.Assign assign) {
 		assign.left.accept(this);
 		assign.expr.accept(this);
-		if (!assign.left.type.equal(BaseType.ERROR)
+		if(assign.expr.tag==Tree.DCOPY||assign.expr.tag==Tree.SCOPY){
+			if(!assign.expr.type.equal(BaseType.ERROR)&&(!assign.left.type.isClassType()||!assign.expr.type.isClassType()||!assign.left.type.equal(assign.expr.type))){
+				issueError(new CopyExprNotTheSameError(assign.getLocation(),assign.left.type.toString(),assign.expr.type.toString()));
+			}
+		}
+		else if (!assign.left.type.equal(BaseType.ERROR)
 				&& (assign.left.type.isFuncType() || !assign.expr.type
 						.compatible(assign.left.type))) {
 			issueError(new IncompatBinOpError(assign.getLocation(),
@@ -654,6 +690,38 @@ public class TypeCheck extends Tree.Visitor {
 			if(!e.expr.type.equals(caseexpr.casesexpr.defaultexpr.expr.type)){
 				caseexpr.type=BaseType.ERROR;
 				issueError(new ACaseIsDifferentWithOtherError(e.getLocation(),e.expr.type.toString(),caseexpr.casesexpr.defaultexpr.expr.type.toString()));
+			}
+		}
+	}
+
+	public void visitDeepCopyExpr(Tree.DeepCopy copy) {
+		copy.expr.accept(this);
+		if(!copy.expr.type.isClassType()){
+			issueError(new ExpectedClassTypeForCopyExpr(copy.getLocation(),copy.expr.type.toString()));
+			copy.type=BaseType.ERROR;
+		}
+		else{
+			copy.type=copy.expr.type;
+		}
+	}
+
+	public void visitShallowCopyExpr(Tree.ShallowCopy copy) {
+		copy.expr.accept(this);
+		if(!copy.expr.type.isClassType()){
+			issueError(new ExpectedClassTypeForCopyExpr(copy.getLocation(),copy.expr.type.toString()));
+			copy.type=BaseType.ERROR;
+		}
+		else{
+			copy.type=copy.expr.type;
+		}
+	}
+
+	public void visitDoStmt(Tree.DoStmt dostmt) {
+		for(Tree.DoSubStmt e:dostmt.dobranches){
+			e.constant.accept(this);
+			e.branch.accept(this);
+			if(!e.constant.type.equal(BaseType.BOOL)){
+				issueError(new DoStmtRequestdTypeBoolError(e.getLocation(),e.constant.type.toString()));
 			}
 		}
 	}
