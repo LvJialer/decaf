@@ -717,6 +717,7 @@ public class TypeCheck extends Tree.Visitor {
 	}
 
 	public void visitDoStmt(Tree.DoStmt dostmt) {
+		breaks.add(dostmt);
 		for(Tree.DoSubStmt e:dostmt.dobranches){
 			e.constant.accept(this);
 			e.branch.accept(this);
@@ -724,6 +725,7 @@ public class TypeCheck extends Tree.Visitor {
 				issueError(new DoStmtRequestdTypeBoolError(e.getLocation(),e.constant.type.toString()));
 			}
 		}
+		breaks.pop();
 	}
 
 	private void issueError(DecafError error) {

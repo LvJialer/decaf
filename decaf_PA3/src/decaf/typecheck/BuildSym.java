@@ -119,7 +119,7 @@ public class BuildSym extends Tree.Visitor {
 			if (table.getCurrentScope().equals(sym.getScope())) {
 				issueError(new DeclConflictError(v.getLocation(), v.getName(),
 						sym.getLocation()));
-			} else if ((sym.getScope().isFormalScope() || sym.getScope()
+					} else if ((sym.getScope().isFormalScope() || sym.getScope()
 					.isLocalScope())) {
 				issueError(new DeclConflictError(v.getLocation(), v.getName(),
 						sym.getLocation()));
@@ -166,6 +166,9 @@ public class BuildSym extends Tree.Visitor {
 			break;
 		case Tree.BOOL:
 			type.type = BaseType.BOOL;
+			break;
+		case Tree.COMPLEX:
+			type.type = BaseType.COMPLEX;
 			break;
 		default:
 			type.type = BaseType.STRING;
@@ -230,6 +233,12 @@ public class BuildSym extends Tree.Visitor {
 	public void visitWhileLoop(Tree.WhileLoop whileLoop) {
 		if (whileLoop.loopBody != null) {
 			whileLoop.loopBody.accept(this);
+		}
+	}
+
+	public void visitDoStmt(Tree.DoStmt dostmt) {
+		for(Tree.DoSubStmt e:dostmt.dobranches){
+			e.branch.accept(this);
 		}
 	}
 
