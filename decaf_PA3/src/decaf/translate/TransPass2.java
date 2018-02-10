@@ -55,6 +55,11 @@ public class TransPass2 extends Tree.Visitor {
 			Temp t = Temp.createTempI4();
 			t.sym = varDef.symbol;
 			varDef.symbol.setTemp(t);
+			if(varDef.symbol.getType().equal(BaseType.COMPLEX)){
+				Temp imgt=Temp.createTempI4();
+				imgt.sym=varDef.symbol;
+				varDef.symbol.setImgTemp(imgt);
+			}
 		}
 	}
 
@@ -62,44 +67,67 @@ public class TransPass2 extends Tree.Visitor {
 	public void visitBinary(Tree.Binary expr) {
 		expr.left.accept(this);
 		expr.right.accept(this);
-		switch (expr.tag) {
-		case Tree.PLUS:
-			expr.val = tr.genAdd(expr.left.val, expr.right.val);
-			break;
-		case Tree.MINUS:
-			expr.val = tr.genSub(expr.left.val, expr.right.val);
-			break;
-		case Tree.MUL:
-			expr.val = tr.genMul(expr.left.val, expr.right.val);
-			break;
-		case Tree.DIV:
-			expr.val = tr.genDiv(expr.left.val, expr.right.val);
-			break;
-		case Tree.MOD:
-			expr.val = tr.genMod(expr.left.val, expr.right.val);
-			break;
-		case Tree.AND:
-			expr.val = tr.genLAnd(expr.left.val, expr.right.val);
-			break;
-		case Tree.OR:
-			expr.val = tr.genLOr(expr.left.val, expr.right.val);
-			break;
-		case Tree.LT:
-			expr.val = tr.genLes(expr.left.val, expr.right.val);
-			break;
-		case Tree.LE:
-			expr.val = tr.genLeq(expr.left.val, expr.right.val);
-			break;
-		case Tree.GT:
-			expr.val = tr.genGtr(expr.left.val, expr.right.val);
-			break;
-		case Tree.GE:
-			expr.val = tr.genGeq(expr.left.val, expr.right.val);
-			break;
-		case Tree.EQ:
-		case Tree.NE:
-			genEquNeq(expr);
-			break;
+		if(expr.left.type.equal(BaseType.COMPLEX)){
+			switch (expr.tag) {
+				case Tree.PLUS:
+					expr.val = tr.genAdd(expr.left.val, expr.right.val);
+					expr.imgval=tr.genAdd(expr.left.imgval, expr.right.imgval);
+					break;
+				case Tree.MINUS:
+					expr.val = tr.genSub(expr.left.val, expr.right.val);
+					expr.imgval=tr.genSub(expr.left.imgval, expr.right.imgval);
+					break;
+				case Tree.MUL:
+					Temp t1=tr.genMul(expr.left.val, expr.right.val);
+					Temp t2=tr.genMul(expr.left.imgval, expr.right.imgval);
+					expr.val=tr.genSub(t1, t2);
+					Temp t3=tr.genMul(expr.left.val, expr.right.imgval);
+					Temp t4=tr.genMul(expr.left.val, expr.right.imgval);
+					expr.imgval=tr.genAdd(t3, t4);
+				default:
+					break;
+			}
+		}
+		else{
+			switch (expr.tag) {
+				case Tree.PLUS:
+					expr.val = tr.genAdd(expr.left.val, expr.right.val);
+					break;
+				case Tree.MINUS:
+					expr.val = tr.genSub(expr.left.val, expr.right.val);
+					break;
+				case Tree.MUL:
+					expr.val = tr.genMul(expr.left.val, expr.right.val);
+					break;
+				case Tree.DIV:
+					expr.val = tr.genDiv(expr.left.val, expr.right.val);
+					break;
+				case Tree.MOD:
+					expr.val = tr.genMod(expr.left.val, expr.right.val);
+					break;
+				case Tree.AND:
+					expr.val = tr.genLAnd(expr.left.val, expr.right.val);
+					break;
+				case Tree.OR:
+					expr.val = tr.genLOr(expr.left.val, expr.right.val);
+					break;
+				case Tree.LT:
+					expr.val = tr.genLes(expr.left.val, expr.right.val);
+					break;
+				case Tree.LE:
+					expr.val = tr.genLeq(expr.left.val, expr.right.val);
+					break;
+				case Tree.GT:
+					expr.val = tr.genGtr(expr.left.val, expr.right.val);
+					break;
+				case Tree.GE:
+					expr.val = tr.genGeq(expr.left.val, expr.right.val);
+					break;
+				case Tree.EQ:
+				case Tree.NE:
+					genEquNeq(expr);
+					break;
+			}
 		}
 	}
 
@@ -137,11 +165,19 @@ public class TransPass2 extends Tree.Visitor {
 			Tree.Ident varRef = (Tree.Ident) assign.left;
 			tr.genStore(assign.expr.val, varRef.owner.val, varRef.symbol
 					.getOffset());
+			if(assign.left.type.equal(BaseType.COMPLEX)){
+				tr.genStore(assign.expr.imgval, varRef.owner.val, varRef.symbol
+					.getImgOffset());
+			}
 			break;
 		case PARAM_VAR:
 		case LOCAL_VAR:
 			tr.genAssign(((Tree.Ident) assign.left).symbol.getTemp(),
 					assign.expr.val);
+			if(assign.left.type.equal(BaseType.COMPLEX)){
+				tr.genAssign(((Tree.Ident) assign.left).symbol.getImgTemp(),
+					assign.expr.imgval);
+			}
 			break;
 		}
 	}
@@ -154,6 +190,10 @@ public class TransPass2 extends Tree.Visitor {
 			break;
 		case Tree.BOOL:
 			literal.val = tr.genLoadImm4((Boolean)(literal.value) ? 1 : 0);
+			break;
+		case Tree.COMPLEX:
+			literal.val=tr.genLoadImm4(0);
+			literal.imgval=tr.genLoadImm4(((Integer)literal.value).intValue());
 			break;
 		default:
 			literal.val = tr.genLoadStrConst((String)literal.value);
@@ -172,8 +212,19 @@ public class TransPass2 extends Tree.Visitor {
 		case Tree.NEG:
 			expr.val = tr.genNeg(expr.expr.val);
 			break;
-		default:
+		case Tree.NOT:
 			expr.val = tr.genLNot(expr.expr.val);
+			break;
+		case Tree.RE:
+			expr.val = expr.expr.val;
+			break;
+		case Tree.IM:
+			expr.val = expr.expr.imgval;
+			break;
+		case Tree.COMPCAST:
+			expr.val = expr.expr.val;
+			expr.imgval = tr.genLoadImm4(0);
+		default:
 		}
 	}
 
@@ -230,6 +281,27 @@ public class TransPass2 extends Tree.Visitor {
 		}
 	}
 
+	public void visitPrintComp(Tree.PrintComp printcompStmt) {
+		for (Tree.Expr r : printcompStmt.exprs) {
+			r.accept(this);
+			tr.genParm(r.val);
+			tr.genIntrinsicCall(Intrinsic.PRINT_INT);
+			Label jmp = Label.createLabel();		
+			Temp zero=tr.genLoadImm4(0);
+			Temp con=tr.genLes(r.val,zero);
+			tr.genBnez(con, jmp);
+			Temp add=tr.genLoadStrConst("+");
+			tr.genParm(add);
+			tr.genIntrinsicCall(Intrinsic.PRINT_STRING);
+			tr.genMark(jmp);
+			tr.genParm(r.imgval);
+			tr.genIntrinsicCall(Intrinsic.PRINT_INT);
+			Temp j=tr.genLoadStrConst("j");
+			tr.genParm(j);
+			tr.genIntrinsicCall(Intrinsic.PRINT_STRING);
+		}
+	}
+
 	@Override
 	public void visitIndexed(Tree.Indexed indexed) {
 		indexed.array.accept(this);
@@ -251,9 +323,15 @@ public class TransPass2 extends Tree.Visitor {
 		switch (ident.lvKind) {
 		case MEMBER_VAR:
 			ident.val = tr.genLoad(ident.owner.val, ident.symbol.getOffset());
+			if(ident.type.equal(BaseType.COMPLEX)){
+				ident.imgval = tr.genLoad(ident.owner.val, ident.symbol.getImgOffset());
+			}
 			break;
 		default:
 			ident.val = ident.symbol.getTemp();
+			if(ident.type.equal(BaseType.COMPLEX)){
+				ident.imgval = ident.symbol.getImgTemp();
+			}
 			break;
 		}
 	}

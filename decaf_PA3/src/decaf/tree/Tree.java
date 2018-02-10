@@ -981,6 +981,7 @@ public abstract class Tree {
 
         public Type type;
         public Temp val;
+        public Temp imgval;
     	public boolean isClass;
     	public boolean usedForRef;
     	
@@ -1449,7 +1450,7 @@ public abstract class Tree {
 
     	public Expr owner;
     	public String name;
-    	public Variable symbol;
+        public Variable symbol;
     	public boolean isDefined;
 
         public Ident(Expr owner, String name, Location loc) {

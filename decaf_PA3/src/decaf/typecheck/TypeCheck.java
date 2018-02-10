@@ -73,7 +73,86 @@ public class TypeCheck extends Tree.Visitor {
 
 	@Override
 	public void visitBinary(Tree.Binary expr) {
-		expr.type = checkBinaryOp(expr.left, expr.right, expr.tag, expr.loc);
+		expr.left.accept(this);
+		expr.right.accept(this);
+
+		if (expr.left.type.equal(BaseType.ERROR) || expr.right.type.equal(BaseType.ERROR)) {
+			switch (expr.tag) {
+			case Tree.PLUS:
+			case Tree.MINUS:
+			case Tree.MUL:
+			case Tree.DIV:
+				expr.type = expr.left.type;
+				return;
+			case Tree.MOD:
+				expr.type=BaseType.INT;
+				return;
+			default:
+				expr.type=BaseType.BOOL;
+				return;
+			}
+		}
+
+		boolean compatible = false;
+		Type returnType = BaseType.ERROR;
+		switch (expr.tag) {
+		case Tree.PLUS:
+		case Tree.MUL:
+			if(expr.left.type.equals(BaseType.COMPLEX)||expr.right.type.equals(BaseType.COMPLEX)){
+				if(expr.left.type.equals(BaseType.INT)){
+					expr.left = new Tree.Unary(Tree.COMPCAST, expr.left, expr.left.loc);
+					expr.left.accept(this);
+				}
+				if(expr.right.type.equals(BaseType.INT)){
+					expr.right = new Tree.Unary(Tree.COMPCAST, expr.right, expr.right.loc);
+					expr.right.accept(this);
+				}
+			}
+			if((expr.left.type.equals(BaseType.COMPLEX)&& expr.right.type.equal(BaseType.COMPLEX))||(expr.left.type.equals(BaseType.INT)&& expr.right.type.equal(BaseType.INT))){
+				compatible = true;
+				returnType=expr.left.type;
+			}
+			break;
+		case Tree.MINUS:
+		case Tree.DIV:
+			compatible = expr.left.type.equals(BaseType.INT)
+					&& expr.left.type.equal(expr.right.type);
+			returnType = expr.left.type;
+			break;
+		case Tree.GT:
+		case Tree.GE:
+		case Tree.LT:
+		case Tree.LE:
+			compatible = expr.left.type.equal(BaseType.INT)
+					&& expr.left.type.equal(expr.right.type);
+			returnType = BaseType.BOOL;
+			break;
+		case Tree.MOD:
+			compatible = expr.left.type.equal(BaseType.INT)
+					&& expr.right.type.equal(BaseType.INT);
+			returnType = BaseType.INT;
+			break;
+		case Tree.EQ:
+		case Tree.NE:
+			compatible = expr.left.type.compatible(expr.right.type)
+					|| expr.right.type.compatible(expr.left.type);
+			returnType = BaseType.BOOL;
+			break;
+		case Tree.AND:
+		case Tree.OR:
+			compatible = expr.left.type.equal(BaseType.BOOL)
+					&& expr.right.type.equal(BaseType.BOOL);
+			returnType = BaseType.BOOL;
+			break;
+		default:
+			break;
+		}
+
+		if (!compatible) {
+			issueError(new IncompatBinOpError(expr.loc, expr.left.type.toString(),
+					Parser.opStr(expr.tag), expr.right.type.toString()));
+		}
+		expr.type = returnType;
 	}
 
 	@Override
@@ -730,86 +809,6 @@ public class TypeCheck extends Tree.Visitor {
 
 	private void issueError(DecafError error) {
 		Driver.getDriver().issueError(error);
-	}
-
-	private Type checkBinaryOp(Tree.Expr left, Tree.Expr right, int op, Location location) {
-		left.accept(this);
-		right.accept(this);
-
-		if (left.type.equal(BaseType.ERROR) || right.type.equal(BaseType.ERROR)) {
-			switch (op) {
-			case Tree.PLUS:
-			case Tree.MINUS:
-			case Tree.MUL:
-			case Tree.DIV:
-				return left.type;
-			case Tree.MOD:
-				return BaseType.INT;
-			default:
-				return BaseType.BOOL;
-			}
-		}
-
-		boolean compatible = false;
-		Type returnType = BaseType.ERROR;
-		switch (op) {
-		case Tree.PLUS:
-		case Tree.MUL:
-			if(left.type.equals(BaseType.COMPLEX)||right.type.equals(BaseType.COMPLEX)){
-				if(left.type.equals(BaseType.INT)){
-					left = new Tree.Unary(Tree.COMPCAST, left, left.loc);
-					visitUnary((Tree.Unary)left);
-				}
-				if(right.type.equals(BaseType.INT)){
-					right = new Tree.Unary(Tree.COMPCAST, right, right.loc);
-					visitUnary((Tree.Unary)right);
-				}
-			}
-			if((left.type.equals(BaseType.COMPLEX)&& right.type.equal(BaseType.COMPLEX))||(left.type.equals(BaseType.INT)&& right.type.equal(BaseType.INT))){
-				compatible = true;
-				returnType=left.type;
-			}
-			break;
-		case Tree.MINUS:
-		case Tree.DIV:
-			compatible = left.type.equals(BaseType.INT)
-					&& left.type.equal(right.type);
-			returnType = left.type;
-			break;
-		case Tree.GT:
-		case Tree.GE:
-		case Tree.LT:
-		case Tree.LE:
-			compatible = left.type.equal(BaseType.INT)
-					&& left.type.equal(right.type);
-			returnType = BaseType.BOOL;
-			break;
-		case Tree.MOD:
-			compatible = left.type.equal(BaseType.INT)
-					&& right.type.equal(BaseType.INT);
-			returnType = BaseType.INT;
-			break;
-		case Tree.EQ:
-		case Tree.NE:
-			compatible = left.type.compatible(right.type)
-					|| right.type.compatible(left.type);
-			returnType = BaseType.BOOL;
-			break;
-		case Tree.AND:
-		case Tree.OR:
-			compatible = left.type.equal(BaseType.BOOL)
-					&& right.type.equal(BaseType.BOOL);
-			returnType = BaseType.BOOL;
-			break;
-		default:
-			break;
-		}
-
-		if (!compatible) {
-			issueError(new IncompatBinOpError(location, left.type.toString(),
-					Parser.opStr(op), right.type.toString()));
-		}
-		return returnType;
 	}
 
 	private void checkTestExpr(Tree.Expr expr) {

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import decaf.tree.Tree;
+import decaf.type.BaseType;
 import decaf.backend.OffsetCounter;
 import decaf.symbol.Class;
 import decaf.symbol.Function;
@@ -59,6 +60,9 @@ public class TransPass1 extends Tree.Visitor {
 		}
 		for (Variable v : vars) {
 			v.setOffset(oc.next(OffsetCounter.WORD_SIZE));
+			if(v.getType().equal(BaseType.COMPLEX)){
+				v.setImgOffset(oc.next(OffsetCounter.WORD_SIZE));
+			}
 		}
 	}
 
