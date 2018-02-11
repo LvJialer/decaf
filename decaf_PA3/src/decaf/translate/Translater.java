@@ -115,6 +115,11 @@ public class Translater {
 			Temp t = v.getTemp();
 			t.offset = v.getOffset();
 			sb.append(t.name + ":" + t.offset + " ");
+			if(v.getType().equal(BaseType.COMPLEX)){
+				Temp t1 = v.getImgTemp();
+				t1.offset = v.getImgOffset();
+				sb.append(t1.name + ":" + t1.offset + " ");
+			}
 		}
 		if (sb.length() > 0) {
 			return Tac.genMemo(sb.substring(0, sb.length() - 1));

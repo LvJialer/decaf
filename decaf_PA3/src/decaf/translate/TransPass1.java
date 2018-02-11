@@ -96,6 +96,14 @@ public class TransPass1 extends Tree.Visitor {
 			t.isParam = true;
 			vd.symbol.setTemp(t);
 			vd.symbol.setOffset(oc.next(vd.symbol.getTemp().size));
+			if(vd.symbol.getType().equal(BaseType.COMPLEX)){
+				order++;
+				Temp t1 = Temp.createTempI4();
+				t1.sym = vd.symbol;
+				t1.isParam = true;
+				vd.symbol.setImgTemp(t1);
+				vd.symbol.setImgOffset(oc.next(vd.symbol.getTemp().size));
+			}
 		}
 	}
 

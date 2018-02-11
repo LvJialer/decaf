@@ -359,6 +359,9 @@ public class TransPass2 extends Tree.Visitor {
 			}
 			for (Tree.Expr expr : callExpr.actuals) {
 				tr.genParm(expr.val);
+				if(expr.type.equal(BaseType.COMPLEX)){
+					tr.genParm(expr.imgval);
+				}
 			}
 			if (callExpr.receiver == null) {
 				callExpr.val = tr.genDirectCall(
