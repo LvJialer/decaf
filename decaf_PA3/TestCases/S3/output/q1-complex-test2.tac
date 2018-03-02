@@ -91,7 +91,7 @@ main:
     parm _T31
     parm _T32
     parm _T33
-    _T34 = *(_T24 + 0)
+    _T34 = VTBL <_Mac>
     _T35 = *(_T34 + 8)
     call _T35
 }
