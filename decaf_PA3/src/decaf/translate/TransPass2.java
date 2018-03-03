@@ -1,6 +1,7 @@
 package decaf.translate;
 
 import java.util.Stack;
+import java.util.Iterator;
 
 import decaf.tree.Tree;
 import decaf.backend.OffsetCounter;
@@ -9,6 +10,9 @@ import decaf.symbol.Variable;
 import decaf.tac.Label;
 import decaf.tac.Temp;
 import decaf.type.BaseType;
+import decaf.symbol.Class;
+import decaf.symbol.Symbol;
+import decaf.type.ClassType;
 import decaf.scope.ClassScope;
 
 public class TransPass2 extends Tree.Visitor {
@@ -495,5 +499,60 @@ public class TransPass2 extends Tree.Visitor {
 		tr.genAssign(result, caseexpr.casesexpr.defaultexpr.expr.val);
 		tr.genMark(exit);
 		caseexpr.val=result;
+	}
+	public void visitDeepCopyExpr(Tree.DeepCopy copy) {
+		copy.expr.accept(this);
+		Class exprClass=((ClassType)(copy.expr.type)).getSymbol();
+		Temp dst=copy(copy.expr.val,exprClass,true);
+		copy.val=dst;
+	}
+
+	public void visitShallowCopyExpr(Tree.ShallowCopy copy) {
+		copy.expr.accept(this);
+		Class exprClass=((ClassType)(copy.expr.type)).getSymbol();
+		Temp dst=copy(copy.expr.val,exprClass,false);
+		copy.val=dst;
+	}
+	private Temp copy(Temp src,Class exprClass,boolean deep){
+		Iterator<Symbol>iter=exprClass.getAssociatedScope().iterator();
+		Temp dst=tr.genDirectCall(exprClass.getNewFuncLabel(),BaseType.INT);
+		while(iter.hasNext()){
+			Symbol sym = iter.next();
+			if (sym.isVariable()){
+				if(sym.getType().isClassType()&&deep){
+					Temp value=tr.genLoad(src, ((Variable)sym).getOffset());
+					Temp t=copy(value,((ClassType)(sym.getType())).getSymbol(),deep);
+					tr.genStore(t, dst, ((Variable)sym).getOffset());
+				}
+				else if(sym.getType().isBaseType()||sym.getType().isClassType()){
+					Temp value=tr.genLoad(src, ((Variable)sym).getOffset());
+					tr.genStore(value, dst, ((Variable)sym).getOffset());
+					if(sym.getType().equal(BaseType.COMPLEX)){
+						Temp imgValue=tr.genLoad(src, ((Variable)sym).getImgOffset());
+						tr.genStore(imgValue, dst, ((Variable)sym).getImgOffset());
+					}
+				}
+			}
+		}
+		return dst;
+	}
+	public void visitDoStmt(Tree.DoStmt dostmt) {
+		Label enter = Label.createLabel();
+		Label exit = Label.createLabel();
+		Label[]branch=new Label[dostmt.dobranches.size()];
+		int i=0;
+		tr.genMark(enter);
+		for(Tree.DoSubStmt e:dostmt.dobranches){
+			branch[i]=Label.createLabel();
+			e.constant.accept(this);
+			tr.genBeqz(e.constant.val, branch[i]);
+			loopExits.push(exit);
+			e.branch.accept(this);
+			tr.genBranch(enter);
+			loopExits.pop();
+			tr.genMark(branch[i]);
+			i++;
+		}
+		tr.genMark(exit);
 	}
 }
