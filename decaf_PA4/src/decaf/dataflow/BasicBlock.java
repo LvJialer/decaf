@@ -54,7 +54,13 @@ public class BasicBlock {
      * 表中的每一项 `Pair(p, A) -> ds` 表示 变量 `A` 在定值点 `p` 的 DU 链为 `ds`.
      * 这里 `p` 和 `ds` 中的每一项均指的定值点或引用点对应的那一条 TAC 的 `id`.
      */
-    private Map<Pair, Set<Integer>> DUChain;
+    public Map<Pair, Set<Integer>> DUChain;
+
+    public Map<Temp, Integer> D;
+
+    public Map<Temp, Set<Integer>> U;
+    
+    public Map<Temp, Boolean> Unext;
 
     public BasicBlock() {
         def = new TreeSet<Temp>(Temp.ID_COMPARATOR);
@@ -65,6 +71,9 @@ public class BasicBlock {
         asms = new ArrayList<Asm>();
 
         DUChain = new TreeMap<Pair, Set<Integer>>(Pair.COMPARATOR);
+        D=new TreeMap<Temp, Integer>(Temp.ID_COMPARATOR);
+        U=new TreeMap<Temp, Set<Integer>>(Temp.ID_COMPARATOR);
+        Unext=new TreeMap<Temp, Boolean>(Temp.ID_COMPARATOR);
     }
 
     public void allocateTacIds() {
@@ -225,6 +234,86 @@ public class BasicBlock {
                     break;
             }
         }
+    }
+
+    public void useGenerateDUChain(Temp tmp,int id){
+        if(D.get(tmp)==null){
+            if(U.get(tmp)==null){
+                U.put(tmp,new TreeSet<Integer>());
+            }
+            U.get(tmp).add(id);
+        }
+        else{
+            DUChain.get(new Pair(D.get(tmp),tmp)).add(id);
+        }
+    }
+    public void defGenerateDUChain(Temp tmp,int id){
+        D.put(tmp,id);
+        DUChain.put(new Pair(id, tmp),new TreeSet<Integer>());
+        Unext.put(tmp, false);
+    }
+    
+    public void generateDUChain(){
+        for (Tac tac = tacList; tac != null; tac = tac.next) {
+            switch (tac.opc) {
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                case MOD:
+                case LAND:
+                case LOR:
+                case GTR:
+                case GEQ:
+                case EQU:
+                case NEQ:
+                case LEQ:
+                case LES:
+                /* use op1 and op2, def op0 */
+                    useGenerateDUChain(tac.op1,tac.id);
+                    useGenerateDUChain(tac.op2,tac.id);
+                    defGenerateDUChain(tac.op0,tac.id);
+                    break;
+                case NEG:
+                case LNOT:
+                case ASSIGN:
+                case INDIRECT_CALL:
+                case LOAD:
+				/* use op1, def op0 */
+                    useGenerateDUChain(tac.op1,tac.id);
+                    if(tac.op0!=null){
+                        defGenerateDUChain(tac.op0,tac.id);
+                    }
+                    break;
+                case LOAD_VTBL:
+                case DIRECT_CALL:
+                case RETURN:
+                case LOAD_STR_CONST:
+                case LOAD_IMM4:
+                /* def op0 */
+                    if(tac.op0!=null){
+                        defGenerateDUChain(tac.op0,tac.id);
+                    }
+                    break;
+                case STORE:
+				/* use op0 and op1*/
+                    useGenerateDUChain(tac.op0,tac.id);
+                    useGenerateDUChain(tac.op1,tac.id);
+                    break;
+                case BEQZ:
+                case BNEZ:
+                case PARM:
+				/* use op0 */
+                    useGenerateDUChain(tac.op0,tac.id);
+                    break;
+                default:
+				/* BRANCH MEMO MARK PARM*/
+                    break;
+            }
+        }
+        if(var!=null){
+            useGenerateDUChain(var,endId);
+        }  
     }
 
     public void printTo(PrintWriter pw) {

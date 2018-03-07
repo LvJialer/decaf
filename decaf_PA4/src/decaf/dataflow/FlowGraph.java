@@ -6,10 +6,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import decaf.tac.Functy;
 import decaf.tac.Tac;
 import decaf.tac.Tac.Kind;
+import decaf.tac.Temp;
 
 public class FlowGraph implements Iterable<BasicBlock> {
 
@@ -30,7 +34,9 @@ public class FlowGraph implements Iterable<BasicBlock> {
         analyzeLiveness();
         for (BasicBlock bb : bbs) {
             bb.analyzeLiveness();
+            bb.generateDUChain();
         }
+        generateDUChain();
     }
 
     private void deleteMemo(Functy func) {
@@ -191,6 +197,41 @@ public class FlowGraph implements Iterable<BasicBlock> {
                 }
             }
         } while (changed);
+    }
+
+    public void generateDUChain(){
+        boolean changed = true;
+        do {
+            changed = false;
+            for (BasicBlock bb : bbs) {
+                for (int i = 0; i < 2; i++) {
+                    Iterator <Entry<Temp, Set<Integer>>> it=bbs.get(bb.next[i]).U.entrySet().iterator();
+                    while(it.hasNext()){
+                        Entry<Temp, Set<Integer>> e=it.next();
+                        Temp tmp=e.getKey();
+                        if(bb.U.get(tmp)==null){
+                            bb.U.put(tmp,new TreeSet<Integer>());
+                        }
+                        if(bb.Unext.get(tmp)==null){
+                            if(bb.U.get(tmp).addAll(bbs.get(bb.next[i]).U.get(tmp))){
+                                changed=true;
+                            }
+                        }
+                    }
+                }
+            }
+        } while (changed);
+        for (BasicBlock bb : bbs) {
+            Iterator <Entry<Temp, Integer>> it=bb.D.entrySet().iterator();
+            while(it.hasNext()){
+                Entry<Temp, Integer> e=it.next();
+                for (int i = 0; i < 2; i++) {
+                    if(bbs.get(bb.next[i]).U.get(e.getKey())!=null){
+                        bb.DUChain.get(new Pair(e.getValue(),e.getKey())).addAll(bbs.get(bb.next[i]).U.get(e.getKey()));
+                    }
+                }
+            }
+        }
     }
 
     public void simplify() {
